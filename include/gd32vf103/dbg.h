@@ -30,11 +30,14 @@
 
 #include "gd32vf103.h"
 
-#define DBG_BASE _AC(0xE0042000,UL)  /*!< DBG base address */
+#define DBG_BASE _AC(0xe0042000,UL)  /*!< DBG base address */
 
 /* register definitions */
 #define DBG_ID   _AC(0x00,UL)  /*!< DBG_ID code register */
 #define DBG_CTL  _AC(0x04,UL)  /*!< DBG control register */
+/* undocumented registers below, names guessed */
+#define DBG_CMD  _AC(0x08,UL)  /*!< DBG command register */
+#define DBG_KEY  _AC(0x0c,UL)  /*!< DBG unlock key register */
 
 /* DBG_ID */
 #define DBG_ID_ID_CODE_Pos   0
@@ -59,12 +62,20 @@
 #define DBG_CTL_DSLP_HOLD    _BIT(1,U)          /*!< keep debugger connection during deepsleep mode */
 #define DBG_CTL_SLP_HOLD     _BIT(0,U)          /*!< keep debugger connection during sleep mode */
 
+/* DBG_CMD */
+#define DBG_CMD_RESET        _BIT(0,U)          /*!< software reset */
+
+/* DBG_KEY */
+#define DBG_KEY_UNLOCK       _AC(0x4b5a6978,U)  /*!< unlock key */
+
 #ifndef __ASSEMBLER__
 #include <stdint.h>
 
 struct gd32vf103_dbg {
 	const uint32_t ID;
 	volatile uint32_t CTL;
+	volatile uint32_t CMD;
+	volatile uint32_t KEY;
 };
 
 static struct gd32vf103_dbg *const DBG = (struct gd32vf103_dbg *)DBG_BASE;
