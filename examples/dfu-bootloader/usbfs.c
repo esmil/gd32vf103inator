@@ -28,7 +28,7 @@
 #include <stddef.h>
 
 #include "gd32vf103/rcu.h"
-#include "gd32vf103/wwdgt.h"
+#include "gd32vf103/dbg.h"
 
 #include "lib/mtimer.h"
 #include "lib/gpio.h"
@@ -618,8 +618,9 @@ usbfs_handle_ep0(void)
 	bytes = usbfs_state.bytes;
 	if (bytes == 0) {
 		if (usbfs_reboot_on_ack) {
-			RCU->APB1EN |= RCU_APB1EN_WWDGTEN;
-			WWDGT->CTL = WWDGT_CTL_WDGTEN;
+			/* do a software reset */
+			DBG->KEY = DBG_KEY_UNLOCK;
+			DBG->CMD = DBG_CMD_RESET;
 			__builtin_unreachable();
 		}
 		return;
