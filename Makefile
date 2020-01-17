@@ -136,13 +136,13 @@ $O/lib-%.o: $(HERE)lib/%.c $(MAKEFILE_LIST) | $O
 	$(call echo,  CC    $<)
 	$Q$(CC) -o $@ $(CFLAGS) $(CPPFLAGS) -c $<
 
-$O/%.o: %.c $(MAKEFILE_LIST) | $O
-	$(call echo,  CC    $<)
-	$Q$(CC) -o $@ $(CFLAGS) $(CPPFLAGS) -c $<
-
 $O/%.o: %.S $(MAKEFILE_LIST) | $O
 	$(call echo,  AS    $<)
 	$Q$(AS) -o $@ $(ASFLAGS) $(CPPFLAGS) -c $<
+
+$O/%.o: %.c $(MAKEFILE_LIST) | $O
+	$(call echo,  CC    $<)
+	$Q$(CC) -o $@ $(CFLAGS) $(CPPFLAGS) -c $<
 
 $O/$(TARGET).elf: $$(objects) $$(LDSCRIPT)
 	$(call echo,  CCLD  $@)
