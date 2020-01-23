@@ -105,8 +105,8 @@ SERIAL     = /dev/ttyUSB0
 DFU_UTIL   = dfu-util
 DFU_DEVICE = 1d50:613e
 
-c-objs   := $(patsubst %.S,%.o,$(filter-out start.S,$(wildcard *.S)))
-asm-objs := $(patsubst %.c,%.o,$(filter-out start.c,$(wildcard *.c)))
+asm-objs := $(patsubst %.S,%.o,$(filter-out start.S,$(wildcard *.S)))
+c-objs   := $(patsubst %.c,%.o,$(filter-out start.c,$(wildcard *.c)))
 
 objs = start.o
 objs += $(patsubst %,lib-%.o,$(sort $(libs)))
