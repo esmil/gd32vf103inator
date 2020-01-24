@@ -110,7 +110,7 @@ c-objs   := $(patsubst %.c,%.o,$(filter-out start.c,$(wildcard *.c)))
 
 objs = start.o
 objs += $(patsubst %,lib-%.o,$(sort $(libs)))
-objs += $(asm-objs) $(c-objs)
+objs += $(sort $(asm-objs) $(c-objs))
 
 objects = $(addprefix $O/,$(objs))$(if $(SPECS),, $O/lib-string.o)
 
