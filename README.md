@@ -45,6 +45,29 @@ git commit -m 'initial commit'
 ```
 
 
+#### Local settings
+
+As seen above the Makefile is meant to be included by the Makefile in
+local project. It is made such that most settings should be overwritable.
+As an example your Makefile could look like this:
+```makefile
+include path/to/gd32vf103inator/Makefile
+
+# disable link-time optimization, but optimize for speed
+OPT = -O2
+
+# too many annoying warnings, I know how to write code
+#WARNINGS = -Wall
+# be extra pedantic, and make sure we fix all warnings
+WARNINGS += -Werror -pedantic
+
+# gd32vf103inator defaults to GD32VF103xB chips
+# with 32k SRAM and 128k FLASH, but we use an x8 chip
+RAM_SIZE = 20*1024
+FLASH_SIZE = 64*1024
+```
+
+
 ## Bootloader
 
 The chip has a built-in DFU bootloader in ROM but unfortunately it has some
@@ -71,7 +94,7 @@ Apparently that's just how the built-in bootloader works :/
 
 Once the bootloader is flashed the chip can be programmed by just
 pressing the reset button and run:
-```
+```sh
 make dfu
 ```
 This will use the dfu-util in your path, flash the chip and reset it to run
@@ -81,7 +104,7 @@ For this to work regular programs must be compiled run from an offset
 of 4k into the flash. That happens automatically, but if you're happy with
 the built-in bootloader or you have some other means of flashing the chip
 you can disable it by adding this line to your Makefile:
-```
+```makefile
 BOOTLOADER = 0
 ```
 
@@ -105,7 +128,7 @@ This is not ideal but with enough options to gcc it can be persuaded to not use 
 
 If your chosen toolchain is not prefixed with `riscv64-unknown-elf-` you can overwrite the
 `CROSS_COMPILE` variable in your local Makefile. Eg. append this to your Makefile:
-```
+```makefile
 CROSS_COMPILE = riscv64-linux-gnu-
 ```
 
@@ -176,7 +199,7 @@ Use Windows Subsystem for Linux and proceed as on Ubuntu above.
 Go to [SiFive's software page][sifive-boards] and search for "GNU Embedded Toolchain".
 Download the relevant tarball/zip-file and unpack it. Now you can either update your path
 to include the `bin` folder inside, or add the following line to your Makefile:
-```
+```makefile
 CROSS_COMPILE = /full/path/to/the/extracted/folder/bin/riscv64-unknown-elf-
 ```
 
