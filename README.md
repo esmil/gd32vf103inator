@@ -6,7 +6,7 @@ This is a collection of headers, some code, linkerscript and Makefile to make it
 easy to program the [GD32VF103][gigadevice] RISC-V microcontroller from GigaDevice.
 It is already supported in [PlatformIO][platformio] and ArduinoIDE is underway,
 but sometimes it's nice to just use your favourite editor and make.
-This is exactly where this project will help you do.
+This is exactly what this project will help you do.
 
 The [user manual][usermanual] and [datasheet][datasheet] for the chip as available
 from [here][datasheets].
@@ -81,8 +81,9 @@ the chip is reset by the external reset pin (aka. the reset button is pressed).
 On any other reset (power on, watchdogs etc.) the bootloader will immediately
 jump 4k into the flash and run the regular program.
 
-You can use the built-in bootloader in ROM to flash this bootloader. First
-make sure to reboot the chip into the ROM bootloader and then run:
+You can use the built-in bootloader in ROM to flash this bootloader.
+First make sure to reboot the chip into the ROM bootloader
+(on the LonganNano board hold BOOT and press RESET) and then run:
 ```sh
 cd gd32vf103inator/examples/dfu-bootloader
 make clean
@@ -100,7 +101,7 @@ make dfu
 This will use the dfu-util in your path, flash the chip and reset it to run
 your program.
 
-For this to work regular programs must be compiled run from an offset
+For this to work regular programs must be compiled to run from an offset
 of 4k into the flash. That happens automatically, but if you're happy with
 the built-in bootloader or you have some other means of flashing the chip
 you can disable it by adding this line to your Makefile:
