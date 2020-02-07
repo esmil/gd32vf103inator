@@ -28,9 +28,9 @@
 
 void gpio_toggle(struct gd32vf103_gpio *port, uint32_t pins)
 {
-	uint32_t pins_set = port->OCTL & pins;
+	uint32_t current = port->OCTL & pins;
 
-	port->BOP = ((pins_set << 16) | pins_set) ^ pins;
+	port->BOP = (current << 16) | (current ^ pins);
 }
 
 void gpio_config(struct gd32vf103_gpio *port, uint32_t pins, enum gpio_mode emode)
@@ -63,10 +63,7 @@ void gpio_config(struct gd32vf103_gpio *port, uint32_t pins, enum gpio_mode emod
 
 void gpio_pin_toggle(gpio_pin_t pin)
 {
-	if (gpio_pin_get(pin))
-		gpio_pin_clear(pin);
-	else
-		gpio_pin_set(pin);
+	gpio_toggle(gpio_pin_port(pin), 1U << gpio_pin_nr(pin));
 }
 
 void gpio_pin_config(gpio_pin_t pin, enum gpio_mode emode)
