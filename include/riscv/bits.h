@@ -92,5 +92,11 @@ wait_for_interrupt(void)
 	__asm__ __volatile__ ("wfi");
 }
 
+static inline void
+nop(void)
+{
+	__asm__ __volatile__ ("nop");
+}
+
 #endif
 #endif
