@@ -153,13 +153,13 @@ pacman -S riscv64-linux-gnu-gcc make
 
 ##### Debian/Ubuntu
 
-If you're running Debian unstable aka. sid you should use the riscv64-unknown-elf toolchain:
+If you're running Debian unstable aka. sid or Ubuntu 20.04 (Focal Fossa) you should use the riscv64-unknown-elf toolchain:
 
 ```sh
 apt-get install gcc-riscv64-unknown-elf make
 ```
 
-On Ubuntu you might want to try the
+On older Ubuntus you might want to try the
 [embedded toolchain from SiFive](#prebuilt-toolchains-from-sifive) below.
 
 Otherwise it should also work with the cross compiler for Linux. Eg.:
