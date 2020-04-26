@@ -232,6 +232,22 @@ csr_read(unsigned int csr)
 	return ret;
 }
 
+static inline unsigned long
+csr_read_set(unsigned int csr, unsigned long val)
+{
+	unsigned long ret;
+	__asm__ ("csrrs  %0, %1, %2" : "=r"(ret) : "n"(csr), "rK"(val) : "memory");
+	return ret;
+}
+
+static inline unsigned long
+csr_read_clear(unsigned int csr, unsigned long val)
+{
+	unsigned long ret;
+	__asm__ ("csrrc  %0, %1, %2" : "=r"(ret) : "n"(csr), "rK"(val) : "memory");
+	return ret;
+}
+
 static inline void
 csr_write(unsigned int csr, unsigned long val)
 {
