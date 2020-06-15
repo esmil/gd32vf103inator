@@ -44,8 +44,10 @@ __ram_size = RAM_SIZE
 .section .vectors, "a", %progbits
 .global vector_base
 .type vector_base, %object
+.option push
+.option norelax
 /* this chip has 87 interrupts and hence need 512-byte alignment
- * for the vector table */
+ * for the vector table according to the Bumblebee core documentation */
 .align 9
 vector_base:
 	/* save some power by disabling these counters */
@@ -144,6 +146,7 @@ vector_base:
 	interrupt CAN1_EWMC
 	interrupt USBFS
 .size vector_base, . - vector_base
+.option pop
 
 .section .text.init.irq
 .global irq_entry
