@@ -64,7 +64,6 @@ void rcu_sysclk_reset(void)
 
 	/* disable and clear all interrupts */
 	RCU->INT = 0x00ff0000U;
-
 }
 
 void rcu_sysclk_pll_irc8m(uint32_t cfg0)
@@ -131,9 +130,6 @@ void rcu_sysclk_hxtal(uint32_t cfg0, uint32_t cfg1)
 
 void rcu_sysclk_init(void)
 {
-#if BOOTLOADER == 0
-	rcu_sysclk_reset();
-#endif
 #ifndef HXTAL
 #if CORECLOCK == 108000000
 	rcu_sysclk_pll_irc8m(RCU_CFG0_PLLMF_MUL27 | RCU_CFG0_APB1PSC_DIV2);
