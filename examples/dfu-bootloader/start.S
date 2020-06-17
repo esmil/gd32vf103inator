@@ -27,6 +27,7 @@
 #include "riscv/bits.h"
 #include "gd32vf103/csr.h"
 #include "gd32vf103/rcu.h"
+#include "gd32vf103/dbg.h"
 
 /* define sizes for the linkerscript */
 .global __bootloader
@@ -270,15 +271,15 @@ _start:
 #endif
 #if BOOTLOADER == 0
 	/* the gd32vf103 bootloader in rom exits in the middle of an
-	 * interrupt, so reset msubm and mstatus and mret to exit
-	 * properly and reset mintstatus */
-	li	a0, 3
-	slli	a0, a0, 11
-	csrw	CSR_MSTATUS, a0
-	csrw	CSR_MSUBM, 0
-	la	a0, 0f
-	csrw	CSR_MEPC, a0
-	mret
+	 * interrupt, so if mintstatus != 0 then do a software reset */
+	csrr	a0, CSR_MINTSTATUS
+	beqz	a0, 0f
+	/* software reset */
+	lui	a1, DBG_BASE >> 12
+	li	a0, DBG_KEY_UNLOCK
+	sw	a0, DBG_KEY(a1)
+	li	a0, DBG_CMD_RESET
+	sw	a0, DBG_CMD(a1)
 0:
 #endif
 .option push
