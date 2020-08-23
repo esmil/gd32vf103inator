@@ -58,6 +58,17 @@ void trap_entry(void)
 }
 #endif
 
+static void mtimer_enable(void)
+{
+	uint64_t next = mtimer_mtime() + BLINK;
+
+	MTIMER->mtimecmp_hi = next >> 32;
+	MTIMER->mtimecmp_lo = next;
+
+	eclic_config(MTIMER_IRQn, ECLIC_ATTR_TRIG_LEVEL, 1);
+	eclic_enable(MTIMER_IRQn);
+}
+
 int main(void)
 {
 	/* initialize system clock */
@@ -74,13 +85,7 @@ int main(void)
 	gpio_pin_set(LED);
 	gpio_pin_config(LED, GPIO_MODE_PP_50MHZ);
 
-	uint64_t next = mtimer_mtime() + BLINK;
-
-	MTIMER->mtimecmp_hi = next >> 32;
-	MTIMER->mtimecmp_lo = next;
-
-	eclic_config(MTIMER_IRQn, ECLIC_ATTR_TRIG_LEVEL, 1);
-	eclic_enable(MTIMER_IRQn);
+	mtimer_enable();
 
 	while (1)
 		wait_for_interrupt();

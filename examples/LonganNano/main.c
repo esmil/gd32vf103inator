@@ -80,6 +80,17 @@ void trap_entry(void)
 }
 #endif
 
+static void mtimer_enable(void)
+{
+	uint64_t next = mtimer_mtime() + BLINK;
+
+	MTIMER->mtimecmp_hi = next >> 32;
+	MTIMER->mtimecmp_lo = next;
+
+	eclic_config(MTIMER_IRQn, ECLIC_ATTR_TRIG_LEVEL, 1);
+	eclic_enable(MTIMER_IRQn);
+}
+
 int main(void)
 {
 	struct term term;
@@ -95,15 +106,7 @@ int main(void)
 	uart0_init(CORECLOCK, 115200);
 	usbacm_init();
 
-	{
-		uint64_t next = mtimer_mtime() + BLINK;
-
-		MTIMER->mtimecmp_hi = next >> 32;
-		MTIMER->mtimecmp_lo = next;
-
-	}
-	eclic_config(MTIMER_IRQn, ECLIC_ATTR_TRIG_LEVEL, 1);
-	eclic_enable(MTIMER_IRQn);
+	mtimer_enable();
 
 	RCU->APB2EN |= RCU_APB2EN_PAEN | RCU_APB2EN_PCEN;
 
