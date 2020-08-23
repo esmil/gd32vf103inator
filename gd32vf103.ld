@@ -52,7 +52,7 @@ SECTIONS
 	} >flash AT>flash :text
 
 	.text : {
-		*(.text.unlikely .text.unlikely.*)
+		*(SORT_BY_ALIGNMENT(.text.unlikely) SORT_BY_ALIGNMENT(.text.unlikely.*))
 		*(.text.startup .text.startup.*)
 		*(.text .text.*)
 		*(.gnu.linkonce.t.*)
