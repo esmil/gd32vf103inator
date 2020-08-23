@@ -166,7 +166,7 @@ clean:
 	$Q$(RM_RF) $O
 
 dump: $O/$$(TARGET).elf
-	$(OBJDUMP) -x -d -j .init -j .text -j .data $< | $(PAGER)
+	$(OBJDUMP) -x -d $< | $(PAGER)
 
 dfu: $O/$$(TARGET).bin
 	$Q$(DFU_UTIL) -d $(DFU_DEVICE) -D $< -R
