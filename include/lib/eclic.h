@@ -39,14 +39,14 @@ unsigned long vector_base[ECLIC_NUM_INTERRUPTS];
 __interrupt
 #endif
 __attribute__((aligned(64)))
-__attribute__((section(".text.init.trap")))
+__attribute__((section(".text.unlikely.trap_entry")))
 void trap_entry(void);
 
 #ifdef __interrupt
 __interrupt
 #endif
 __attribute__((aligned(4)))
-__attribute__((section(".text.init.irq")))
+__attribute__((section(".text.unlikely.irq_entry")))
 void irq_entry(void);
 
 static inline void eclic_enable(unsigned int irq)

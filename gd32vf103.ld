@@ -43,15 +43,15 @@ PHDRS
 
 SECTIONS
 {
+	PROVIDE(__stack = ORIGIN(ram) + LENGTH(ram));
+
 	.init : {
-		*(.vectors)
-		*(.text.init.irq)
-		*(.text.init.trap)
+		KEEP(*(.data.init.enter))
+		KEEP(*(.text.init.enter))
 		KEEP(*(SORT_BY_NAME(.init) SORT_BY_NAME(.init.*)))
 	} >flash AT>flash :text
 
 	.text : {
-		*(.text.init.enter)
 		*(.text.unlikely .text.unlikely.*)
 		*(.text.startup .text.startup.*)
 		*(.text .text.*)
@@ -121,19 +121,13 @@ SECTIONS
 
 	.data : ALIGN_WITH_INPUT {
 		PROVIDE(__data_start = .);
-		*(.ramtext.*)
+		*(.ramtext .ramtext.*)
 		*(.data .data.*)
 		*(.gnu.linkonce.d.*)
 		. = ALIGN(8);
 		PROVIDE(__global_pointer$ = . + 0x800);
 		*(.sdata .sdata.* .sdata2.*)
 		*(.gnu.linkonce.s.*)
-		. = ALIGN(8);
-		*(.srodata.cst16)
-		*(.srodata.cst8)
-		*(.srodata.cst4)
-		*(.srodata.cst2)
-		*(.srodata .srodata.*)
 	} >ram AT>flash :ram_init
 	PROVIDE(__data_source = LOADADDR(.data));
 
@@ -186,6 +180,7 @@ SECTIONS
 		*(.bss .bss.*)
 		*(.gnu.linkonce.b.*)
 		*(COMMON)
+		. = ALIGN(8);
 		__bss_end = .;
 	} >ram AT>ram :ram
 	PROVIDE(__end = __bss_end);
@@ -193,8 +188,11 @@ SECTIONS
 	PROVIDE(end = __bss_end);
 	PROVIDE(__bss_size = __bss_end - __bss_start);
 
-	PROVIDE(__heap_end = ORIGIN(ram) + LENGTH(ram) - (DEFINED(__stack_size) ? __stack_size : 0x800));
-	PROVIDE(__heap_size = __heap_end - __bss_end);
-
-	PROVIDE(__stack = ORIGIN(ram) + LENGTH(ram));
+	/* Make the rest of memory available for heap storage */
+	.heap : {
+		. = ORIGIN(ram) + LENGTH(ram) - (DEFINED(__stack_size) ? __stack_size : 0x800);
+	} >ram AT>ram : ram
+	PROVIDE( __heap_size = SIZEOF(.heap) );
+	PROVIDE( __heap_start = ADDR(.heap) );
+	PROVIDE( __heap_end = ADDR(.heap) + SIZEOF(.heap) );
 }

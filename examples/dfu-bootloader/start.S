@@ -43,7 +43,7 @@ __ram_size = RAM_SIZE
 	.set \name\()_IRQHandler, default_handler
 .endm
 
-.section .vectors, "a", %progbits
+.section .data.init.enter, "a", %progbits
 .global vector_base
 .type vector_base, %object
 .option push
@@ -150,7 +150,7 @@ vector_base:
 .size vector_base, . - vector_base
 .option pop
 
-.section .text.init.irq
+.section .text.unlikely.irq_entry
 .global irq_entry
 .weak irq_entry
 .type irq_entry, %function
@@ -221,7 +221,7 @@ irq_entry:
 .size irq_entry, . - irq_entry
 .endfunc
 
-.section .text.init.trap
+.section .text.unlikely.trap_entry
 .global trap_entry
 .weak trap_entry
 .type trap_entry, %function
@@ -238,7 +238,7 @@ trap_entry:
 	addi	\rd, \rd, %lo(\addr)
 .endm
 
-.section .text.init.enter
+.section .text.startup._start
 .global _start
 .weak _start
 .type _start, %function
