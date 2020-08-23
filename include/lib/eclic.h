@@ -79,6 +79,16 @@ static inline void eclic_global_interrupt_disable(void)
 	csr_clear(CSR_MSTATUS, CSR_MSTATUS_MIE);
 }
 
+static inline unsigned long eclic_global_interrupt_disable_save(void)
+{
+	return csr_read_clear(CSR_MSTATUS, CSR_MSTATUS_MIE);
+}
+
+static inline void eclic_global_interrupt_restore(unsigned long mstatus)
+{
+	csr_write(CSR_MSTATUS, mstatus);
+}
+
 void eclic_init(void);
 void eclic_config(unsigned int irq, uint8_t type, uint8_t priority);
 
