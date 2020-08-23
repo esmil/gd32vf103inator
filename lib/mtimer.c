@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, Emil Renner Berthing
+ * Copyright (c) 2020, Emil Renner Berthing
  *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
@@ -24,37 +24,16 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
  * OF SUCH DAMAGE.
  */
-#ifndef LIB_MTIMER_H
-#define LIB_MTIMER_H
-
 #include <stdint.h>
 
-#include "gd32vf103/mtimer.h"
+#include "lib/mtimer.h"
 
-static inline uint64_t mtimer_mtime(void)
+void mtimer_delay(uint32_t ticks)
 {
-	while (1) {
-		uint32_t hi = MTIMER->mtime_hi;
-		uint32_t lo = MTIMER->mtime_lo;
-		if (hi == MTIMER->mtime_hi)
-			return ((uint64_t)hi << 32) | lo;
-	}
+	uint32_t zero = MTIMER->mtime_lo;
+	uint32_t now;
+
+	do {
+		now = MTIMER->mtime_lo - zero;
+	} while (now < ticks);
 }
-
-static inline uint64_t mtimer_mtimecmp(void)
-{
-	uint32_t hi = MTIMER->mtimecmp_hi;
-	uint32_t lo = MTIMER->mtimecmp_lo;
-	return ((uint64_t)hi << 32) | lo;
-}
-
-void mtimer_delay(uint32_t ticks);
-
-#ifdef MTIMER_FREQ
-static inline void mtimer_udelay(unsigned int us)
-{
-	mtimer_delay(us * MTIMER_FREQ/1000000);
-}
-#endif
-
-#endif

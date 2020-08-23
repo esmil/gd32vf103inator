@@ -28,10 +28,10 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "gd32vf103/mtimer.h"
 #include "gd32vf103/rcu.h"
 #include "gd32vf103/spi.h"
 
+#include "lib/mtimer.h"
 #include "lib/gpio.h"
 
 #include "display.h"
@@ -100,18 +100,6 @@ spi_receive_buffer_nonempty(void)
 	return SPI0->STAT & SPI_STAT_RBNE;
 }
 
-static void
-dp_udelay(unsigned int us)
-{
-	uint32_t zero = MTIMER->mtime_lo;
-	uint32_t end = us * (CORECLOCK/4000000) + 1;
-	uint32_t now;
-
-	do {
-		now = MTIMER->mtime_lo - zero;
-	} while (now < end);
-}
-
 #ifdef DP_CS
 static inline void dp_cs_enable(void)
 {
@@ -132,9 +120,9 @@ void
 dp_reset(void)
 {
 	gpio_pin_clear(DP_RST);
-	dp_udelay(10);
+	mtimer_udelay(10);
 	gpio_pin_set(DP_RST);
-	dp_udelay(120000);
+	mtimer_udelay(120000);
 }
 
 static void
@@ -356,12 +344,12 @@ dp_init(void)
 	SPI0->CTL0 = ctl0 | SPI_CTL0_SPIEN;
 
 	/* release reset */
-	dp_udelay(15);
+	mtimer_udelay(15);
 	gpio_pin_set(DP_RST);
-	dp_udelay(120000);
+	mtimer_udelay(120000);
 
 	dp_sleep_out();
-	dp_udelay(120000);
+	mtimer_udelay(120000);
 
 	const uint8_t *p = initdata;
 	dp_cs_enable();

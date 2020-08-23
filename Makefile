@@ -54,7 +54,7 @@ CPPFLAGS += -DBOOTLOADER=$(BOOTLOADER) -DFLASH_SIZE=$(FLASH_SIZE) -DRAM_SIZE=$(R
 LDFLAGS   = $(OPT) $(ARCHFLAGS) -static -Wl,-O1,--gc-sections,--relax,--build-id=none
 LDSCRIPT  = $(HERE)gd32vf103.ld
 
-libs = eclic rcu gpio
+libs = eclic mtimer rcu gpio
 
 vpath %.S $(HERE)
 vpath %.c $(HERE)

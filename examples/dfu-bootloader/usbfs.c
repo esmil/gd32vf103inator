@@ -166,18 +166,6 @@ static uint16_t usbfs_status;
 bool usbfs_reboot_on_ack;
 
 static void
-usbfs_udelay(unsigned int us)
-{
-	uint32_t zero = MTIMER->mtime_lo;
-	uint32_t end = us * (CORECLOCK/4000000) + 1;
-	uint32_t now;
-
-	do {
-		now = MTIMER->mtime_lo - zero;
-	} while (now < end);
-}
-
-static void
 dumpsetup(const struct usb_setup_packet *p)
 {
 	debug("{\n"
@@ -291,7 +279,7 @@ usbfs_txfifos_flush(void)
 	while ((USBFS->GRSTCTL & USBFS_GRSTCTL_TXFF))
 		/* wait */;
 	/* wait 3 more phy clocks */
-	usbfs_udelay(3);
+	mtimer_udelay(3);
 }
 
 static void
@@ -790,7 +778,7 @@ usbfs_init(void)
 	while ((USBFS->GRSTCTL & USBFS_GRSTCTL_CSRST))
 		debug(".");
 	debug(" done\n");
-	usbfs_udelay(3);
+	mtimer_udelay(3);
 
 	/* force device mode */
 	debug("switching to device mode");
@@ -801,7 +789,7 @@ usbfs_init(void)
 
 	/* manual says: "the application must wait at
 	 * least 25ms for [FDM to] take effect" */
-	usbfs_udelay(25000);
+	mtimer_udelay(25000);
 
 	/* initialize device */
 	USBFS->DCFG =
@@ -833,7 +821,7 @@ usbfs_init(void)
 	while ((USBFS->GRSTCTL & USBFS_GRSTCTL_RXFF))
 		/* wait */;
 	/* wait 3 more phy clocks */
-	usbfs_udelay(3);
+	mtimer_udelay(3);
 
 	USBFS->DIEPINTEN = 0U;
 	USBFS->DOEPINTEN = 0U;
