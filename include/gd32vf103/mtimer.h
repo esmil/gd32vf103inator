@@ -29,6 +29,11 @@
 
 #include "gd32vf103.h"
 
+/* in the gd32vf103 the mtime timer increments at coreclk/4 */
+#ifdef CORECLOCK
+#define MTIMER_FREQ (CORECLOCK/4)
+#endif
+
 #define MTIMER_BASE _AC(0xD1000000,UL)  /*!< MTIMER base address */
 
 /* register definitions */

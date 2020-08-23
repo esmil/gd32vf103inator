@@ -29,7 +29,7 @@
 #include "lib/rcu.h"
 #include "lib/gpio.h"
 
-#define BLINK (CORECLOCK/4) /* 1 second */
+#define BLINK MTIMER_FREQ /* 1 second */
 
 #define LED GPIO_PA1
 
