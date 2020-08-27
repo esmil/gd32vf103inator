@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2019, Keith Packard
- * Copyright (c) 2019, Emil Renner Berthing
+ * Copyright (c) 2019-2020, Emil Renner Berthing
  *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
@@ -59,7 +59,7 @@ SECTIONS
 	} >flash AT>flash :text
 
 	.fini : {
-		KEEP(*(SORT_NONE(.fini)))
+		KEEP(*(.fini))
 		__text_end = .;
 	} >flash AT>flash :text
 
@@ -77,6 +77,8 @@ SECTIONS
 		*(.srodata.cst4)
 		*(.srodata.cst2)
 		*(.srodata .srodata.*)
+		*(.data.rel.ro .data.rel.ro.*)
+		*(.got .got.*)
 	} >flash AT>flash :text
 
 	. = ALIGN(8);
@@ -105,7 +107,7 @@ SECTIONS
 		KEEP(*crtbegin.o(.ctors))
 		KEEP(*crtbegin?.o(.ctors))
 		KEEP(*(EXCLUDE_FILE(*crtend.o *crtend?.o) .ctors))
-		KEEP(*(SORT(.ctors.*)))
+		KEEP(*(SORT_BY_INIT_PRIORITY(.ctors.*)))
 		KEEP(*(.ctors))
 	} >flash AT>flash :text
 
@@ -113,9 +115,19 @@ SECTIONS
 		KEEP(*crtbegin.o(.dtors))
 		KEEP(*crtbegin?.o(.dtors))
 		KEEP(*(EXCLUDE_FILE(*crtend.o *crtend?.o) .dtors))
-		KEEP(*(SORT(.dtors.*)))
+		KEEP(*(SORT_BY_INIT_PRIORITY(.dtors.*)))
 		KEEP(*(.dtors))
 	} >flash AT>flash :text
+
+	/*
+	 * Data values which are preserved across reset
+	 */
+	.preserve (NOLOAD) : {
+		PROVIDE(__preserve_start__ = .);
+		KEEP(*(SORT_BY_NAME(.preserve.*)))
+		KEEP(*(.preserve))
+		PROVIDE(__preserve_end__ = .);
+	} >ram AT>ram :ram
 
 	. = ALIGN(4);
 
@@ -152,7 +164,7 @@ SECTIONS
 	PROVIDE(edata = __data_end);
 	PROVIDE(__data_size = __data_end - __data_start);
 
-	.tbss : {
+	.tbss (NOLOAD) : {
 		PROVIDE(__bss_start = .);
 		*(.tbss .tbss.* .gnu.linkonce.tb.*)
 		*(.tcommon)
@@ -170,11 +182,11 @@ SECTIONS
 	 * across them.  We actually need memory allocated for tbss,
 	 * so we create a special segment here just to make room
 	 */
-	.tbss_space : {
+	.tbss_space (NOLOAD) : {
 		. = . + __tbss_size;
 	} >ram AT>ram :ram
 
-	.bss : {
+	.bss (NOLOAD) : {
 		*(.sbss*)
 		*(.gnu.linkonce.sb.*)
 		*(.bss .bss.*)
@@ -189,10 +201,18 @@ SECTIONS
 	PROVIDE(__bss_size = __bss_end - __bss_start);
 
 	/* Make the rest of memory available for heap storage */
-	.heap : {
-		. = ORIGIN(ram) + LENGTH(ram) - (DEFINED(__stack_size) ? __stack_size : 0x800);
-	} >ram AT>ram : ram
-	PROVIDE( __heap_size = SIZEOF(.heap) );
-	PROVIDE( __heap_start = ADDR(.heap) );
-	PROVIDE( __heap_end = ADDR(.heap) + SIZEOF(.heap) );
+	PROVIDE(__heap_start = __end);
+	PROVIDE(__heap_end = __stack - (DEFINED(__stack_size) ? __stack_size : 0x800));
+	PROVIDE(__heap_size = __heap_end - __heap_start);
+
+	/* Define a stack region to make sure it fits in memory */
+	.stack __heap_end (NOLOAD) : {
+		. += (DEFINED(__stack_size) ? __stack_size : 0x800);
+	} >ram :ram
+
+	/* Throw away C++ exception handling information */
+	/DISCARD/ : {
+		*(.eh_frame .eh_frame.*)
+		*(.note .note.*)
+	}
 }
