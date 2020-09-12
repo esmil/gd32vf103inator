@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, Emil Renner Berthing
+ * Copyright (c) 2019-2020, Emil Renner Berthing
  *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
@@ -30,9 +30,28 @@
 #include <stddef.h>
 #include <stdarg.h>
 
-int getchar(void);
+typedef struct __file FILE;
 
-int puts(const char *);
+typedef void __putc_t(FILE *stream, char c);
+typedef int __done_t(FILE *stream);
+
+struct __file {
+	__putc_t *putc;
+	__done_t *done;
+};
+
+extern FILE *stdout;
+extern FILE *stderr;
+
+int fputc(int c, FILE *stream);
+int fputs(const char *s, FILE *stream);
+
+int putchar(int c);
+int puts(const char *s);
+
+__attribute__((format(printf, 2, 3)))
+int fprintf(FILE *stream, const char *format, ...);
+int vfprintf(FILE *stream, const char *format, va_list ap);
 
 __attribute__((format(printf, 1, 2)))
 int printf(const char *restrict, ...);

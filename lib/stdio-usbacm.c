@@ -34,14 +34,13 @@
 
 #include "lib/eclic.h"
 #include "lib/mtimer.h"
-#include "lib/xprintf.h"
 #include "lib/stdio-usbacm.h"
 
 #if 1
 #define debug(...)
 #else
-#include "uart0.h"
-#define debug(...) uart0_printf(__VA_ARGS__)
+#include "lib/stdio-uart0.h"
+#define debug(...) fprintf(uart0, __VA_ARGS__)
 #endif
 
 #define CDC_INTERFACE 0
@@ -312,7 +311,7 @@ static union {
 	uint8_t byte[64];
 } acm_outbuf;
 
-int getchar(void)
+int usbacm_getchar(void)
 {
 	static uint8_t head;
 	unsigned int bytes;
@@ -405,7 +404,7 @@ acm_send(void)
 }
 
 static void
-acm__putc(const struct xo *xo, char c)
+acm_putc(FILE *stream, char c)
 {
 	static bool seenr;
 	unsigned int tail = acm_intail;
@@ -420,41 +419,20 @@ acm__putc(const struct xo *xo, char c)
 	acm_intail = tail % ARRAY_SIZE(acm_inbuf);
 }
 
-static void
-acm__done(const struct xo *xo)
+static int
+acm_done(FILE *stream)
 {
 	if (acm_inidle) {
 		acm_inidle = false;
 		acm_send();
 	}
+	return 0;
 }
 
-static const struct xo acm_xo = {
-	.putc = acm__putc,
-	.done = acm__done,
+const FILE usbacm_stream = {
+	.putc = acm_putc,
+	.done = acm_done,
 };
-
-int puts(const char *s)
-{
-	xo_puts(&acm_xo, s);
-	return 0;
-}
-
-int vprintf(const char *restrict fmt, va_list ap)
-{
-	xo_vprintf(&acm_xo, fmt, ap);
-	return 0;
-}
-
-int printf(const char *restrict fmt, ...)
-{
-	va_list ap;
-
-	va_start(ap, fmt);
-	xo_vprintf(&acm_xo, fmt, ap);
-	va_end(ap);
-	return 0;
-}
 
 static void
 usbfs_ep0in_transfer(void)

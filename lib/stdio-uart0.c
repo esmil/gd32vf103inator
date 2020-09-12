@@ -26,17 +26,16 @@
  */
 #include <stdint.h>
 #include <stdbool.h>
-#include <stdarg.h>
+#include <stdio.h>
 
 #include "gd32vf103/rcu.h"
 #include "gd32vf103/usart.h"
 
 #include "lib/eclic.h"
 #include "lib/gpio.h"
-#include "lib/xprintf.h"
 #include "lib/stdio-uart0.h"
 
-int getchar(void)
+int uart0_getchar(void)
 {
 	while (!(USART0->STAT & USART_STAT_RBNE))
 		/* wait */;
@@ -69,7 +68,7 @@ out:
 }
 
 static void
-uart0__putc(const struct xo *io, char c)
+uart0_putc(FILE *stream, char c)
 {
 	static bool seenr;
 	unsigned int last = uart0_output.last;
@@ -85,14 +84,15 @@ uart0__putc(const struct xo *io, char c)
 	uart0_output.last = last % ARRAY_SIZE(uart0_output.buf);
 }
 
-static void
-uart0__done(const struct xo *io)
+static int
+uart0_done(FILE *stream)
 {
 	USART0->CTL0 |= USART_CTL0_TBEIE;
+	return 0;
 }
 #else
 static void
-uart0__putc(const struct xo *xo, char c)
+uart0_putc(FILE *stream, char c)
 {
 	static bool seenr;
 
@@ -109,38 +109,16 @@ uart0__putc(const struct xo *xo, char c)
 	USART0->DATA = c;
 }
 
-static void
-uart0__done(const struct xo *io)
+static int uart0_done(FILE *stream)
 {
+	return 0;
 }
 #endif
 
-static const struct xo uart0_xo = {
-	.putc = uart0__putc,
-	.done = uart0__done,
+const FILE uart0_stream = {
+	.putc = uart0_putc,
+	.done = uart0_done,
 };
-
-int puts(const char *s)
-{
-	xo_puts(&uart0_xo, s);
-        return 0;
-}
-
-int vprintf(const char *restrict fmt, va_list ap)
-{
-	xo_vprintf(&uart0_xo, fmt, ap);
-	return 0;
-}
-
-int printf(const char *restrict fmt, ...)
-{
-	va_list ap;
-
-	va_start(ap, fmt);
-	xo_vprintf(&uart0_xo, fmt, ap);
-	va_end(ap);
-	return 0;
-}
 
 void uart0_init(uint32_t pclk, uint32_t target, uint8_t priority)
 {

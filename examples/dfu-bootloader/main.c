@@ -54,6 +54,7 @@ int main(void)
 	RCU->APB2EN |= RCU_APB2EN_PCEN;
 #else
 	uart0_init(CORECLOCK, 115200, 2);
+	stdout = uart0;
 	printf("\n*** DFU ***\n");
 
 	RCU->APB2EN |= RCU_APB2EN_PAEN;
@@ -68,7 +69,7 @@ int main(void)
 #ifdef NDEBUG
 		wait_for_interrupt();
 #else
-		char c = getchar();
+		int c = uart0_getchar();
 
 		switch (c) {
 		case 't':

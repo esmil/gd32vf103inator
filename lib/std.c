@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, Emil Renner Berthing
+ * Copyright (c) 2019-2020, Emil Renner Berthing
  *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
@@ -27,14 +27,8 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
-#include <stdarg.h>
+#include <string.h>
 #include <stdio.h>
-
-#ifdef putc
-#undef putc
-#endif
-
-#include "lib/xprintf.h"
 
 /* define these for more functionality
 #define PRINTF_ALT
@@ -43,33 +37,173 @@
 #define PRINTF_LLX
 */
 
-void
-xo_putc(const struct xo *xo, char c)
+FILE *stdout;
+FILE *stderr;
+
+int memcmp(const void *s1, const void *s2, size_t n)
 {
-	xo->putc(xo, c);
-	xo->done(xo);
+	const unsigned char *p1;
+	const unsigned char *p2;
+
+	if (s1 == s2)
+		return 0;
+
+	p1 = s1;
+	p2 = s2;
+	for (size_t i = 0; i < n; i++) {
+		int a = p1[i];
+		int b = p2[i];
+
+		if (a != b)
+			return a - b;
+	}
+
+	return 0;
 }
 
-static void
-xo__string(const struct xo *xo, const char *s)
+void *memset(void *s, int c, size_t n)
+{
+	unsigned char *dest = s;
+	unsigned char *end = dest + n;
+
+	while (dest < end) {
+		*dest = c;
+		dest++;
+	}
+
+	return s;
+}
+
+void *memcpy(void *restrict dest, const void *restrict src, size_t n)
+{
+	char *cdest = dest;
+	const char *csrc = src;
+
+	for (; n; n--)
+		*cdest++ = *csrc++;
+
+	return dest;
+}
+
+void *memmove(void *dest, const void *src, size_t n)
+{
+	char *cdest = dest;
+	const char *csrc = src;
+
+	if (cdest > csrc && cdest < csrc + n) {
+		cdest += n;
+		csrc += n;
+		for (; n; n--)
+			*--cdest = *--csrc;
+	} else {
+		for (; n; n--)
+			*cdest++ = *csrc++;
+	}
+
+	return dest;
+}
+
+size_t strlen(const char *s)
+{
+	const char *e = s;
+
+	while (*e != '\0')
+		e++;
+
+	return (uintptr_t)e - (uintptr_t)s;
+}
+
+int strcmp(const char *s1, const char *s2)
+{
+	int a;
+	int b;
+
+	do {
+		a = *s1++;
+		b = *s2++;
+	} while (a == b && a != '\0');
+
+	return a - b;
+}
+
+int strncmp(const char *s1, const char *s2, size_t n)
+{
+	int a;
+	int b;
+
+	if (n == 0)
+		return 0;
+
+	for (size_t i = 0; i < n; i++) {
+		a = s1[i];
+		b = s2[i];
+		if (a != b || a == '\0')
+			break;
+	}
+
+	return a - b;
+}
+
+char *strchr(const char *s, int c)
+{
+	while (1) {
+		int b = *s;
+
+		if (b == c)
+			return (char *)s;
+		if (b == '\0')
+			return NULL;
+
+		s++;
+	}
+}
+
+char *strrchr(const char *s, int c)
+{
+	char *ret = NULL;
+
+	while (1) {
+		int b = *s;
+
+		if (b == c)
+			ret = (char *)s;
+		if (b == '\0')
+			return ret;
+
+		s++;
+	}
+}
+
+int fputc(int c, FILE *stream)
+{
+	stream->putc(stream, c);
+	return stream->done(stream);
+}
+
+int fputs(const char *s, FILE *stream)
 {
 	char c;
 
 	while ((c = *s++) != '\0')
-		xo->putc(xo, c);
+		stream->putc(stream, c);
+
+	stream->putc(stream, '\n');
+
+	return stream->done(stream);
 }
 
-void
-xo_puts(const struct xo *xo, const char *s)
+static void
+printf_string(FILE *stream, const char *s)
 {
-	xo__string(xo, s);
-	xo->putc(xo, '\n');
-	xo->done(xo);
+	char c;
+
+	while ((c = *s++) != '\0')
+		stream->putc(stream, c);
 }
 
 #ifdef PRINTF_LL
 static void
-xo__llu(const struct xo *xo, int width, char pad, unsigned long long v)
+printf_llu(FILE *stream, int width, char pad, unsigned long long v)
 {
 	char buf[20];
 	char *p = buf;
@@ -81,25 +215,25 @@ xo__llu(const struct xo *xo, int width, char pad, unsigned long long v)
 	} while (v);
 
 	for (; width > 0; width--)
-		xo->putc(xo, pad);
+		stream->putc(stream, pad);
 
 	do {
-		xo->putc(xo, *--p);
+		stream->putc(stream, *--p);
 	} while (p > buf);
 }
 
 static void
-xo__lld(const struct xo *xo, int width, char pad, long long v)
+printf_lld(FILE *stream, int width, char pad, long long v)
 {
 	if (v < 0) {
-		xo->putc(xo, '-');
+		stream->putc(stream, '-');
 		v = -v;
 	}
-	xo__llu(xo, width, pad, v);
+	printf_llu(stream, width, pad, v);
 }
 #else
 static void
-xo__u(const struct xo *xo, int width, char pad, unsigned int v)
+printf_u(FILE *stream, int width, char pad, unsigned int v)
 {
 	char buf[10];
 	char *p = buf;
@@ -111,28 +245,28 @@ xo__u(const struct xo *xo, int width, char pad, unsigned int v)
 	} while (v);
 
 	for (; width > 0; width--)
-		xo->putc(xo, pad);
+		stream->putc(stream, pad);
 
 	do {
-		xo->putc(xo, *--p);
+		stream->putc(stream, *--p);
 	} while (p > buf);
 }
 
 static void
-xo__d(const struct xo *xo, int width, char pad, int v)
+printf_d(FILE *stream, int width, char pad, int v)
 {
 	if (v < 0) {
-		xo->putc(xo, '-');
+		stream->putc(stream, '-');
 		v = -v;
 	}
-	xo__u(xo, width, pad, v);
+	printf_u(stream, width, pad, v);
 }
 #endif
 
 #ifdef PRINTF_O
 #ifdef PRINTF_LL
 static void
-xo__llo(const struct xo *xo, int width, char pad, unsigned long long v)
+printf_llo(FILE *stream, int width, char pad, unsigned long long v)
 {
 	char buf[22];
 	char *p = buf;
@@ -144,15 +278,15 @@ xo__llo(const struct xo *xo, int width, char pad, unsigned long long v)
 	} while (v);
 
 	for (; width > 0; width--)
-		xo->putc(xo, pad);
+		stream->putc(stream, pad);
 
 	do {
-		xo->putc(xo, *--p);
+		stream->putc(stream, *--p);
 	} while (p > buf);
 }
 #else
 static void
-xo__o(const struct xo *xo, int width, char pad, unsigned int v)
+printf_o(FILE *stream, int width, char pad, unsigned int v)
 {
 	char buf[11];
 	char *p = buf;
@@ -164,10 +298,10 @@ xo__o(const struct xo *xo, int width, char pad, unsigned int v)
 	} while (v);
 
 	for (; width > 0; width--)
-		xo->putc(xo, pad);
+		stream->putc(stream, pad);
 
 	do {
-		xo->putc(xo, *--p);
+		stream->putc(stream, *--p);
 	} while (p > buf);
 }
 #endif
@@ -185,7 +319,7 @@ static const char xdigits[] = {
 
 #if defined(PRINTF_LL) || defined(PRINTF_LLX)
 static void
-xo__llx(const struct xo *xo, int width, char pad, const char *digits, unsigned long long v)
+printf_llx(FILE *stream, int width, char pad, const char *digits, unsigned long long v)
 {
 	char buf[16];
 	char *p = buf;
@@ -197,15 +331,15 @@ xo__llx(const struct xo *xo, int width, char pad, const char *digits, unsigned l
 	} while (v);
 
 	for (; width > 0; width--)
-		xo->putc(xo, pad);
+		stream->putc(stream, pad);
 
 	do {
-		xo->putc(xo, *--p);
+		stream->putc(stream, *--p);
 	} while (p > buf);
 }
 #else
 static void
-xo__x(const struct xo *xo, int width, char pad, const char *digits, unsigned int v)
+printf_x(FILE *stream, int width, char pad, const char *digits, unsigned int v)
 {
 	char buf[8];
 	char *p = buf;
@@ -217,17 +351,16 @@ xo__x(const struct xo *xo, int width, char pad, const char *digits, unsigned int
 	} while (v);
 
 	for (; width > 0; width--)
-		xo->putc(xo, pad);
+		stream->putc(stream, pad);
 
 	do {
-		xo->putc(xo, *--p);
+		stream->putc(stream, *--p);
 	} while (p > buf);
 }
 #endif
 
 
-void
-xo_vprintf(const struct xo *xo, const char *fmt, va_list ap)
+int vfprintf(FILE *stream, const char *fmt, va_list ap)
 {
 	unsigned int size;
 	int width;
@@ -247,7 +380,7 @@ fmt:
 		case '%':
 			goto arg;
 		}
-		xo->putc(xo, c);
+		stream->putc(stream, c);
 	}
 
 arg:
@@ -264,7 +397,7 @@ arg:
 		case '\0':
 			goto out;
 		case '%':
-			xo->putc(xo, '%');
+			stream->putc(stream, '%');
 			goto fmt;
 #ifdef PRINTF_ALT
 		case '#':
@@ -292,43 +425,43 @@ arg:
 			size += 1;
 			break;
 		case 'c':
-			xo->putc(xo, va_arg(ap, int));
+			stream->putc(stream, va_arg(ap, int));
 			goto fmt;
 		case 's':
-			xo__string(xo, va_arg(ap, const char *));
+			printf_string(stream, va_arg(ap, const char *));
 			goto fmt;
 		case 'u':
 #ifdef PRINTF_LL
-			xo__llu(xo, width, pad,
+			printf_llu(stream, width, pad,
 					(size > 3) ?
 					va_arg(ap, unsigned long long) :
 					va_arg(ap, unsigned int));
 #else
-			xo__u(xo, width, pad,
+			printf_u(stream, width, pad,
 					va_arg(ap, unsigned int));
 #endif
 			goto fmt;
 		case 'd':
 		case 'i':
 #ifdef PRINTF_LL
-			xo__lld(xo, width, pad,
+			printf_lld(stream, width, pad,
 					(size > 3) ?
 					va_arg(ap, long long) :
 					va_arg(ap, int));
 #else
-			xo__d(xo, width, pad,
+			printf_d(stream, width, pad,
 					va_arg(ap, int));
 #endif
 			goto fmt;
 #ifdef PRINTF_O
 		case 'o':
 #ifdef PRINTF_LL
-			xo__llo(xo, width, pad,
+			printf_llo(stream, width, pad,
 					(size > 3) ?
 					va_arg(ap, unsigned long long) :
 					va_arg(ap, unsigned int));
 #else
-			xo__o(xo, width, pad,
+			printf_o(stream, width, pad,
 					va_arg(ap, unsigned int));
 #endif
 			goto fmt;
@@ -337,8 +470,8 @@ arg:
 			digits = Xdigits;
 #ifdef PRINTF_ALT
 			if (alt) {
-				xo->putc(xo, '0');
-				xo->putc(xo, 'X');
+				stream->putc(stream, '0');
+				stream->putc(stream, 'X');
 			}
 #endif
 			goto common_x;
@@ -346,18 +479,18 @@ arg:
 			digits = xdigits;
 #ifdef PRINTF_ALT
 			if (alt) {
-				xo->putc(xo, '0');
-				xo->putc(xo, 'x');
+				stream->putc(stream, '0');
+				stream->putc(stream, 'x');
 			}
 #endif
 		common_x:
 #if defined(PRINTF_LL) || defined(PRINTF_LLX)
-			xo__llx(xo, width, pad, digits,
+			printf_llx(stream, width, pad, digits,
 					(size > 3) ?
 					va_arg(ap, unsigned long long) :
 					va_arg(ap, unsigned int));
 #else
-			xo__x(xo, width, pad, digits,
+			printf_x(stream, width, pad, digits,
 					va_arg(ap, unsigned int));
 #endif
 			goto fmt;
@@ -366,43 +499,82 @@ arg:
 		}
 	}
 out:
-	xo->done(xo);
+	return stream->done(stream);
+}
+
+int fprintf(FILE *stream, const char *restrict fmt, ...)
+{
+	va_list ap;
+	int ret;
+
+	va_start(ap, fmt);
+	ret = vfprintf(stream, fmt, ap);
+	va_end(ap);
+	return ret;
+}
+
+int putchar(int c)
+{
+	return fputc(c, stdout);
+}
+
+int puts(const char *s)
+{
+	return fputs(s, stdout);
+}
+
+int vprintf(const char *restrict fmt, va_list ap)
+{
+	return vfprintf(stdout, fmt, ap);
+}
+
+int printf(const char *restrict fmt, ...)
+{
+	va_list ap;
+	int ret;
+
+	va_start(ap, fmt);
+	ret = vprintf(fmt, ap);
+	va_end(ap);
+	return ret;
 }
 
 struct snprintf {
-	struct xo xo;
+	FILE stream;
 	char *str;
 	char *end;
 };
 
-static void snprintf__putc(const struct xo *xo, char c)
+static void snprintf_putc(FILE *stream, char c)
 {
-	struct snprintf *snp = (struct snprintf *)xo;
+	struct snprintf *snp = (struct snprintf *)stream;
 
 	if (snp->str < snp->end)
 		*snp->str = c;
 	snp->str++;
 }
 
-static void snprintf__done(const struct xo *xo)
+static int snprintf_done(FILE *stream)
 {
-	struct snprintf *snp = (struct snprintf *)xo;
+	struct snprintf *snp = (struct snprintf *)stream;
 
 	if (snp->str < snp->end)
 		*snp->str = '\0';
+
+	return 0;
 }
 
 int vsprintf(char *restrict str, const char *restrict fmt, va_list ap)
 {
 	struct snprintf snp = {
-		.xo.putc = snprintf__putc,
-		.xo.done = snprintf__done,
+		.stream.putc = snprintf_putc,
+		.stream.done = snprintf_done,
 		.str = str,
 		.end = (char *)~0UL,
 	};
 
-	xo_vprintf(&snp.xo, fmt, ap);
-	return (uintptr_t)snp.str - (uintptr_t)str;
+	vfprintf(&snp.stream, fmt, ap);
+	return snp.str - str;
 }
 
 int sprintf(char *restrict str, const char *restrict fmt, ...)
@@ -419,14 +591,14 @@ int sprintf(char *restrict str, const char *restrict fmt, ...)
 int vsnprintf(char *restrict str, size_t size, const char *restrict fmt, va_list ap)
 {
 	struct snprintf snp = {
-		.xo.putc = snprintf__putc,
-		.xo.done = snprintf__done,
+		.stream.putc = snprintf_putc,
+		.stream.done = snprintf_done,
 		.str = str,
 		.end = str + size,
 	};
 
-	xo_vprintf(&snp.xo, fmt, ap);
-	return (uintptr_t)snp.str - (uintptr_t)str;
+	vfprintf(&snp.stream, fmt, ap);
+	return snp.str - str;
 }
 
 int snprintf(char *restrict str, size_t size, const char *restrict fmt, ...)

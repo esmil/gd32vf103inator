@@ -27,6 +27,10 @@
 #ifndef LIB_UART0_STDIO_H
 #define LIB_UART0_STDIO_H
 
+extern const FILE uart0_stream;
+static FILE *const uart0 = (FILE *)&uart0_stream;
+
 void uart0_init(uint32_t tlclk, uint32_t target, uint8_t priority);
+int uart0_getchar(void);
 
 #endif

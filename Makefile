@@ -1,4 +1,4 @@
-# Copyright (c) 2019, Emil Renner Berthing
+# Copyright (c) 2019-2020, Emil Renner Berthing
 #
 # Redistribution and use in source and binary forms, with or without modification,
 # are permitted provided that the following conditions are met:
@@ -64,7 +64,6 @@ CFLAGS   += -ffreestanding -ftls-model=local-exec
 CPPFLAGS += -I$(HERE)std -D_LIBC_LIMITS_H_
 LDFLAGS  += -nostdlib
 LIBS     += -lgcc
-libs     += xprintf
 else ifeq ($(SPECS),picolibc)
 else
 LDFLAGS  += -nostartfiles
@@ -112,7 +111,7 @@ objs = start.o
 objs += $(patsubst %,lib-%.o,$(sort $(libs)))
 objs += $(sort $(asm-objs) $(c-objs))
 
-objects = $(addprefix $O/,$(objs))$(if $(SPECS),, $O/lib-string.o)
+objects = $(addprefix $O/,$(objs))$(if $(SPECS),, $O/lib-std.o)
 
 ifdef V
 echo := @:
@@ -127,10 +126,7 @@ all: $O/$$(TARGET).bin
 release: CPPFLAGS += -DNDEBUG
 release: $O/$$(TARGET).bin
 
-# compiler emitted memcpy doesn't seem to work with lto
-$O/lib-string.o: $(HERE)lib/string.c $(MAKEFILE_LIST) | $O
-	$(call echo,  CC    $<)
-	$Q$(CC) -o $@ $(filter-out -flto,$(CFLAGS)) $(CPPFLAGS) -c $<
+$O/lib-std.o: CFLAGS += -fno-builtin
 
 $O/lib-%.o: $(HERE)lib/%.c $(MAKEFILE_LIST) | $O
 	$(call echo,  CC    $<)

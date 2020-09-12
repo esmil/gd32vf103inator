@@ -27,6 +27,10 @@
 #ifndef LIB_STDIO_USBACM_H
 #define LIB_STDIO_USBACM_H
 
+extern const FILE usbacm_stream;
+static FILE *const usbacm = (FILE *)&usbacm_stream;
+
 void usbacm_init(void);
+int usbacm_getchar(void);
 
 #endif

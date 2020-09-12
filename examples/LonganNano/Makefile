@@ -1,6 +1,6 @@
 include ../../Makefile
 
-libs += stdio-usbacm
+libs += stdio-usbacm stdio-uart0
 
 # some LonganNano boards comes with the biggest
 # GD32VF103CB chip with 32k SRAM and 128k FLASH,

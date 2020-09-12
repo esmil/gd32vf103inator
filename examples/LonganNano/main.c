@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, Emil Renner Berthing
+ * Copyright (c) 2019-2020, Emil Renner Berthing
  *
  * Redistribution and use in source and binary forms, with or without modification,
  * are permitted provided that the following conditions are met:
@@ -33,9 +33,9 @@
 #include "lib/rcu.h"
 #include "lib/gpio.h"
 #include "lib/stdio-usbacm.h"
+#include "lib/stdio-uart0.h"
 
 #include "LonganNano.h"
-#include "uart0.h"
 #include "display.h"
 #include "term.h"
 
@@ -69,11 +69,11 @@ void trap_entry(void)
 	unsigned long mcause = csr_read(CSR_MCAUSE);
 
 	if ((mcause & CSR_MCAUSE_EXCCODE_Msk) == 0xfffU)
-		printf("nmi!\n");
+		fprintf(uart0, "nmi!\n");
 
-	uart0_printf("trap: mcause = 0x%08lx\n", mcause);
-	uart0_printf("trap: mepc   = 0x%08lx\n", csr_read(CSR_MEPC));
-	uart0_printf("trap: mtval  = 0x%08lx\n", csr_read(CSR_MTVAL));
+	fprintf(uart0, "trap: mcause = 0x%08lx\n", mcause);
+	fprintf(uart0, "trap: mepc   = 0x%08lx\n", csr_read(CSR_MEPC));
+	fprintf(uart0, "trap: mtval  = 0x%08lx\n", csr_read(CSR_MTVAL));
 
 	while (1)
 		/* forever */;
@@ -103,8 +103,9 @@ int main(void)
 	/* enable global interrupts */
 	eclic_global_interrupt_enable();
 
-	uart0_init(CORECLOCK, 115200);
+	uart0_init(CORECLOCK, 115200, 2);
 	usbacm_init();
+	stdout = usbacm;
 
 	mtimer_enable();
 
@@ -132,7 +133,7 @@ int main(void)
 	term_init(&term, 0xfff, 0x000);
 
 	while (1) {
-		char c = getchar();
+		int c = usbacm_getchar();
 
 		switch (c) {
 		case '\r':
