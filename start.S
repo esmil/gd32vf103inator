@@ -149,13 +149,16 @@ vector_base:
 .size vector_base, . - vector_base
 .option pop
 
+.extern main
+
 .section .text.unlikely.irq_entry
 .global irq_entry
 .weak irq_entry
 .type irq_entry, %function
-.func irq_entry
 .align 2
 irq_entry:
+.func irq_entry
+.cfi_startproc
 	addi	sp, sp, -20*REGBYTES
 	STORE	ra, 0*REGBYTES(sp)
 	STORE	tp, 1*REGBYTES(sp)
@@ -217,19 +220,22 @@ irq_entry:
 	LOAD	t6, 16*REGBYTES(sp)
 	addi	sp, sp, 20*REGBYTES
 	mret
-.size irq_entry, . - irq_entry
+.cfi_endproc
 .endfunc
+.size irq_entry, . - irq_entry
 
 .section .text.unlikely.trap_entry
 .global trap_entry
 .weak trap_entry
 .type trap_entry, %function
-.func trap_entry
 .align 6
 trap_entry:
-	j	trap_entry
-.size trap_entry, . - trap_entry
+.func trap_entry
+.cfi_startproc
+1:	j	1b
+.cfi_endproc
 .endfunc
+.size trap_entry, . - trap_entry
 
 
 .macro laa rd, addr
@@ -241,8 +247,8 @@ trap_entry:
 .global _start
 .weak _start
 .type _start, %function
-.func _start
 _start:
+.func _start
 .cfi_startproc
 .cfi_undefined ra
 #if BOOTLOADER == 0
@@ -295,17 +301,20 @@ _start:
 4:
 	call	main
 .cfi_endproc
+.endfunc
 .size _start, . - _start
-.endfunc
 
-.global default_handler
-.weak default_handler
-.type default_handler, %function
-.func default_handler
-default_handler:
+.global __halt
+.type __halt, %function
+__halt:
+.func __halt
+.cfi_startproc
 	csrc	CSR_MSTATUS, 0xf
-	j	default_handler
-.size default_handler, . - default_handler
+1:	j	1b
+.cfi_endproc
 .endfunc
+.size __halt, . - __halt
+
+.set default_handler, __halt
 
 /* vim: set ft=asm: */
