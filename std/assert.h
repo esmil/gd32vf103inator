@@ -30,7 +30,7 @@
 #define assert(__e) ((void)0)
 #else
 #define assert(__e) \
-	((__e) ? (void)0 : __assert_func(__FILE__, __LINE__, __PRETTY_FUNCTION__, #__e))
+	((__e) ? (void)0 : __assert_func(__FILE__, __LINE__, __file__, #__e))
 
 __attribute__((noreturn))
 void __assert_func(const char *file, int line, const char *func, const char *expr);
