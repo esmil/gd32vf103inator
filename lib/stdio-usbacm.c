@@ -1191,7 +1191,7 @@ usbfs_allocate_buffers(uint32_t rx,
 }
 
 void
-usbacm_init(void)
+usbacm_init(uint8_t priority)
 {
 	/* turn on USBFS clock */
 	RCU->AHBEN |= RCU_AHBEN_USBFSEN;
@@ -1294,7 +1294,7 @@ usbacm_init(void)
 		USBFS_GINTEN_SPIE;
 
 	/* enable eclic interrupt */
-	eclic_config(USBFS_IRQn, ECLIC_ATTR_TRIG_LEVEL, 4);
+	eclic_config(USBFS_IRQn, ECLIC_ATTR_TRIG_LEVEL, priority);
 	eclic_enable(USBFS_IRQn);
 
 	/* set usb global interrupt flag */

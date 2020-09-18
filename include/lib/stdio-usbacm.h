@@ -27,10 +27,13 @@
 #ifndef LIB_STDIO_USBACM_H
 #define LIB_STDIO_USBACM_H
 
+#include <stdint.h>
+#include <stdio.h>
+
 extern const FILE usbacm_stream;
 static FILE *const usbacm = (FILE *)&usbacm_stream;
 
-void usbacm_init(void);
+void usbacm_init(uint8_t priority);
 int usbacm_getchar(void);
 
 #endif

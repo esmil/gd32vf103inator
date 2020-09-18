@@ -104,7 +104,7 @@ int main(void)
 	eclic_global_interrupt_enable();
 
 	uart0_init(CORECLOCK, 115200, 2);
-	usbacm_init();
+	usbacm_init(4);
 	stdout = usbacm;
 
 	mtimer_enable();
