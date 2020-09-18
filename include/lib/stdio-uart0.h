@@ -24,8 +24,11 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
  * OF SUCH DAMAGE.
  */
-#ifndef LIB_UART0_STDIO_H
-#define LIB_UART0_STDIO_H
+#ifndef LIB_STDIO_UART0_H
+#define LIB_STDIO_UART0_H
+
+#include <stdint.h>
+#include <stdio.h>
 
 extern const FILE uart0_stream;
 static FILE *const uart0 = (FILE *)&uart0_stream;
