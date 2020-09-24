@@ -77,21 +77,21 @@ AS      = $(CROSS_COMPILE)gcc $(if $(SPECS),-specs=$(SPECS).specs ,)-x assembler
 OBJDUMP = $(CROSS_COMPILE)objdump
 OBJCOPY = $(CROSS_COMPILE)objcopy
 HEX     = $(OBJCOPY) -O ihex
-BIN     = $(OBJCOPY) -O binary -S
+BIN     = $(OBJCOPY) -O binary --strip-all
 
 ifdef ComSpec
 MKDIR_P    = mkdir
 RM_RF      = rmdir /q /s
 echo       = @echo $1
-size       = cmd /c 'for %I in ($1) do @echo.  %~zI bytes'
+size       = @cmd /c 'for %I in ($1) do @echo.  %~zI bytes'
 else
 MKDIR_P    = mkdir -p
 RM_RF      = rm -rf
 echo       = @echo '$1'
 ifeq ($(filter-out Linux MSYS%,$(OS)),)
-size       = stat --printf '  %s bytes\n' $1
+size       = @stat --printf '  %s bytes\n' $1
 else
-size       = stat -f '  %z bytes' $1
+size       = @stat -f '  %z bytes' $1
 endif
 endif
 
@@ -113,10 +113,13 @@ objs += $(sort $(asm-objs) $(c-objs))
 
 objects = $(addprefix $O/,$(objs))$(if $(SPECS),, $O/lib-std.o)
 
-ifdef V
-echo := @:
+# use make V=1 to see raw commands or make -s for silence
+ifeq ($V$(findstring s,$(word 1,$(MAKEFLAGS))),)
+Q := @
+else
+echo =
+size =
 endif
-Q := $(if $V,,@)
 
 .SECONDEXPANSION:
 .PHONY: all release clean dump dfu romdfu uart cat
@@ -151,7 +154,7 @@ $O/%.hex: $O/%.elf
 $O/%.bin: $O/%.elf
 	$(call echo,  BIN   $@)
 	$Q$(BIN) $< $@
-	$Q$(call size,$@)
+	$(call size,$@)
 
 $O:
 	$(call echo,  MKDIR $@)
