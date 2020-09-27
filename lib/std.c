@@ -42,20 +42,18 @@ FILE *stderr;
 
 int memcmp(const void *s1, const void *s2, size_t n)
 {
-	const unsigned char *p1;
-	const unsigned char *p2;
+	if (s1 != s2 && n > 0) {
+		const char *p1 = s1;
+		const char *p2 = s2;
+		const char *p1end = p1 + n;
 
-	if (s1 == s2)
-		return 0;
+		do {
+			int a = *p1++;
+			int b = *p2++;
 
-	p1 = s1;
-	p2 = s2;
-	for (size_t i = 0; i < n; i++) {
-		int a = p1[i];
-		int b = p2[i];
-
-		if (a != b)
-			return a - b;
+			if (a != b)
+				return a - b;
+		} while (p1 < p1end);
 	}
 
 	return 0;
@@ -63,12 +61,13 @@ int memcmp(const void *s1, const void *s2, size_t n)
 
 void *memset(void *s, int c, size_t n)
 {
-	unsigned char *dest = s;
-	unsigned char *end = dest + n;
+	if (n > 0) {
+		char *dest = s;
+		char *end = dest + n;
 
-	while (dest < end) {
-		*dest = c;
-		dest++;
+		do {
+			*dest++ = c;
+		} while (dest < end);
 	}
 
 	return s;
@@ -76,28 +75,36 @@ void *memset(void *s, int c, size_t n)
 
 void *memcpy(void *restrict dest, const void *restrict src, size_t n)
 {
-	char *cdest = dest;
-	const char *csrc = src;
+	if (n > 0) {
+		char *cdest = dest;
+		const char *csrc = src;
+		const char *cend = csrc + n;
 
-	for (; n; n--)
-		*cdest++ = *csrc++;
+		do {
+			*cdest++ = *csrc++;
+		} while (csrc < cend);
+	}
 
 	return dest;
 }
 
 void *memmove(void *dest, const void *src, size_t n)
 {
-	char *cdest = dest;
-	const char *csrc = src;
+	if (n > 0) {
+		char *cdest = dest;
+		const char *csrc = src;
+		const char *cend = csrc + n;
 
-	if (cdest > csrc && cdest < csrc + n) {
-		cdest += n;
-		csrc += n;
-		for (; n; n--)
-			*--cdest = *--csrc;
-	} else {
-		for (; n; n--)
-			*cdest++ = *csrc++;
+		if (cdest > csrc && cdest < cend) {
+			cdest += n;
+			do {
+				*--cdest = *--cend;
+			} while (csrc < cend);
+		} else {
+			do {
+				*cdest++ = *csrc++;
+			} while (csrc < cend);
+		}
 	}
 
 	return dest;
@@ -105,12 +112,12 @@ void *memmove(void *dest, const void *src, size_t n)
 
 size_t strlen(const char *s)
 {
-	const char *e = s;
+	const char *end = s;
 
-	while (*e != '\0')
-		e++;
+	while (*end != '\0')
+		end++;
 
-	return (uintptr_t)e - (uintptr_t)s;
+	return (uintptr_t)end - (uintptr_t)s;
 }
 
 int strcmp(const char *s1, const char *s2)
@@ -128,20 +135,21 @@ int strcmp(const char *s1, const char *s2)
 
 int strncmp(const char *s1, const char *s2, size_t n)
 {
-	int a;
-	int b;
+	if (n > 0) {
+		const char *s1end = s1 + n;
 
-	if (n == 0)
-		return 0;
+		do {
+			int a = *s1++;
+			int b = *s2++;
 
-	for (size_t i = 0; i < n; i++) {
-		a = s1[i];
-		b = s2[i];
-		if (a != b || a == '\0')
-			break;
+			if (a != b)
+				return a - b;
+			if (a == '\0')
+				break;
+		} while (s1 < s1end);
 	}
 
-	return a - b;
+	return 0;
 }
 
 char *strchr(const char *s, int c)
