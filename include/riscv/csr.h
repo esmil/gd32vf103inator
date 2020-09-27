@@ -216,6 +216,8 @@
 #define CSR_MCOUNTINHIBIT_HPM(x) _BIT(x,UL)
 
 #ifndef __ASSEMBLER__
+#ifdef __OPTIMIZE__
+/* this gives better type warnings */
 static inline unsigned long
 csr_swap(unsigned int csr, unsigned long val)
 {
@@ -265,6 +267,38 @@ csr_clear(unsigned int csr, unsigned long val)
 {
 	__asm__ ("csrc  %0, %1" :: "n"(csr), "rK"(val) : "memory");
 }
+#else
+/* ..but this works with -O0 */
+#define csr_swap(csr, val) ({\
+	unsigned long __ret;\
+	__asm__ ("csrrw  %0, %1, %2" : "=r"(__ret) : "n"(csr), "rK"(val) : "memory");\
+	__ret;\
+})
+#define csr_read(csr) ({\
+	unsigned long __ret;\
+	__asm__ ("csrr %0, %1" : "=r"(__ret) : "n"(csr) : "memory");\
+	__ret;\
+})
+#define csr_read_set(csr, val) ({\
+	unsigned long __ret;\
+	__asm__ ("csrrs  %0, %1, %2" : "=r"(__ret) : "n"(csr), "rK"(val) : "memory");\
+	__ret;\
+})
+#define csr_read_clear(csr, val) ({\
+	unsigned long __ret;\
+	__asm__ ("csrrc  %0, %1, %2" : "=r"(__ret) : "n"(csr), "rK"(val) : "memory");\
+	__ret;\
+})
+#define csr_write(csr, val) do {\
+	__asm__ ("csrw  %0, %1" :: "n"(csr), "rK"(val) : "memory");\
+} while (0)
+#define csr_set(csr, val) do {\
+	__asm__ ("csrs  %0, %1" :: "n"(csr), "rK"(val) : "memory");\
+} while (0)
+#define csr_clear(csr, val) do {\
+	__asm__ ("csrc  %0, %1" :: "n"(csr), "rK"(val) : "memory");\
+} while (0)
 #endif
 
+#endif
 #endif
