@@ -62,12 +62,12 @@ int memcmp(const void *s1, const void *s2, size_t n)
 void *memset(void *s, int c, size_t n)
 {
 	if (n > 0) {
-		char *dest = s;
-		char *end = dest + n;
+		char *p = s;
+		char *end = p + n;
 
 		do {
-			*dest++ = c;
-		} while (dest < end);
+			*p++ = c;
+		} while (p < end);
 	}
 
 	return s;
@@ -110,20 +110,76 @@ void *memmove(void *dest, const void *src, size_t n)
 	return dest;
 }
 
+void *memchr(const void *s, int c, size_t n)
+{
+	if (n > 0) {
+		const char *p = s;
+		const char *end = p + n;
+
+		do {
+			if (*p == c)
+				return (void *)p;
+			p++;
+		} while (p < end);
+	}
+
+	return NULL;
+}
+
+void *memrchr(const void *s, int c, size_t n)
+{
+	if (n > 0) {
+		const char *start = s;
+		const char *p = start + n;
+
+		do {
+			p--;
+			if (*p == c)
+				return (void *)p;
+		} while (p > start);
+	}
+
+	return NULL;
+}
+
+void *rawmemchr(const void *s, int c)
+{
+	const char *p = s;
+
+	while (*p != c)
+		p++;
+
+	return (void *)p;
+}
+
 size_t strlen(const char *s)
 {
-	const char *end = s;
+	const char *p = s;
+	char c;
 
-	while (*end != '\0')
-		end++;
+	do {
+		c = *p++;
+	} while (c != '\0');
 
-	return (uintptr_t)end - (uintptr_t)s;
+	return (uintptr_t)p - (uintptr_t)s - 1;
+}
+
+size_t strnlen(const char *s, size_t maxlen)
+{
+	const char *p = s;
+	const char *end = s + maxlen;
+	char c;
+
+	do {
+		c = *p++;
+	} while (c != '\0' && p < end);
+
+	return (uintptr_t)p - (uintptr_t)s - 1;
 }
 
 int strcmp(const char *s1, const char *s2)
 {
-	int a;
-	int b;
+	int a, b;
 
 	do {
 		a = *s1++;
@@ -137,49 +193,142 @@ int strncmp(const char *s1, const char *s2, size_t n)
 {
 	if (n > 0) {
 		const char *s1end = s1 + n;
+		int a, b;
 
 		do {
-			int a = *s1++;
-			int b = *s2++;
-
+			a = *s1++;
+			b = *s2++;
 			if (a != b)
 				return a - b;
-			if (a == '\0')
-				break;
-		} while (s1 < s1end);
+		} while (a != '\0' && s1 < s1end);
 	}
 
 	return 0;
 }
 
+char *strcpy(char *restrict dest, const char *restrict src)
+{
+	char *p = dest;
+	char c;
+
+	do {
+		c = *src++;
+		*p++ = c;
+	} while (c != '\0');
+
+	return dest;
+}
+
+char *strncpy(char *restrict dest, const char *restrict src, size_t n)
+{
+	if (n > 0) {
+		const char *end = src + n;
+		char *p = dest;
+		char c;
+
+		do {
+			c = *src++;
+			*p++ = c;
+		} while (c != '\0' && src < end);
+	}
+
+	return dest;
+}
+
+char *stpcpy(char *restrict dest, const char *restrict src)
+{
+	char c;
+
+	do {
+		c = *src++;
+		*dest++ = c;
+	} while (c != '\0');
+
+	return dest;
+}
+
+char *stpncpy(char *restrict dest, const char *restrict src, size_t n)
+{
+	if (n > 0) {
+		const char *end = src + n;
+		char c;
+
+		do {
+			c = *src++;
+			*dest++ = c;
+		} while (c != '\0' && src < end);
+	}
+
+	return dest;
+}
+
+char *strcat(char *restrict dest, const char *restrict src)
+{
+	char *p = dest;
+	char c;
+
+	while (*p != '\0')
+		p++;
+
+	do {
+		c = *src++;
+		*p++ = c;
+	} while (c != '\0');
+
+	return dest;
+}
+
+char *strncat(char *restrict dest, const char *restrict src, size_t n)
+{
+	if (n > 0) {
+		const char *end = src + n;
+		char *p = dest;
+		char c;
+
+		while (*p != '\0')
+			p++;
+
+		do {
+			c = *src++;
+			*p++ = c;
+			if (c == '\0')
+				goto out;
+		} while (src < end);
+
+		*p = '\0';
+	}
+
+out:
+	return dest;
+}
+
 char *strchr(const char *s, int c)
 {
-	while (1) {
-		int b = *s;
+	int b;
 
+	do {
+		b = *s;
 		if (b == c)
 			return (char *)s;
-		if (b == '\0')
-			return NULL;
-
 		s++;
-	}
+	} while (b != '\0');
+
+	return NULL;
 }
 
 char *strrchr(const char *s, int c)
 {
 	char *ret = NULL;
+	int b;
 
-	while (1) {
-		int b = *s;
-
+	do {
+		b = *s;
 		if (b == c)
 			ret = (char *)s;
-		if (b == '\0')
-			return ret;
-
 		s++;
-	}
+	} while (b != '\0');
+
+	return ret;
 }
 
 int fputc(int c, FILE *stream)
