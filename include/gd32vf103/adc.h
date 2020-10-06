@@ -96,11 +96,11 @@
 
 /* ADC_CTL1 */
 #define ADC_CTL1_TSVREN                _BIT(23,U)             /*!< channel 16 and 17 enable of ADC0 */
-#define ADC_CTL1_SWRCST                _BIT(22,U)             /*!< start on regular channel */
-#define ADC_CTL1_SWICST                _BIT(21,U)             /*!< start on inserted channel */
-#define ADC_CTL1_ETERC                 _BIT(20,U)             /*!< external trigger conversion mode for inserted channels */
+#define ADC_CTL1_SWRCST                _BIT(22,U)             /*!< start on regular channels */
+#define ADC_CTL1_SWICST                _BIT(21,U)             /*!< start on inserted channels */
+#define ADC_CTL1_ETERC                 _BIT(20,U)             /*!< external trigger enable for regular channels */
 #define ADC_CTL1_ETSRC_Pos             17
-#define ADC_CTL1_ETSRC_Msk             _AC(0x000e0000,U)      /*!< external trigger select for regular channel */
+#define ADC_CTL1_ETSRC_Msk             _AC(0x000e0000,U)      /*!< external trigger select for regular channels */
 #define ADC_CTL1_ETSRC(x)              ((x) << ADC_CTL1_ETSRC_Pos)
 #define ADC_CTL1_ETSRC_T0_CH0          ADC_CTL1_ETSRC(0)      /*!< TIMER0 CH0 event select */
 #define ADC_CTL1_ETSRC_T0_CH1          ADC_CTL1_ETSRC(1)      /*!< TIMER0 CH1 event select */
@@ -109,10 +109,10 @@
 #define ADC_CTL1_ETSRC_T2_TRGO         ADC_CTL1_ETSRC(4)      /*!< TIMER2 TRGO event select */
 #define ADC_CTL1_ETSRC_T3_CH3          ADC_CTL1_ETSRC(5)      /*!< TIMER3 CH3 event select */
 #define ADC_CTL1_ETSRC_EXTI_11         ADC_CTL1_ETSRC(6)      /*!< external interrupt line 11 */
-#define ADC_CTL1_ETSRC_NONE            ADC_CTL1_ETSRC(7)      /*!< software trigger */
-#define ADC_CTL1_ETEIC                 _BIT(15,U)             /*!< external trigger enable for inserted channel */
+#define ADC_CTL1_ETSRC_SWRCST          ADC_CTL1_ETSRC(7)      /*!< software trigger */
+#define ADC_CTL1_ETEIC                 _BIT(15,U)             /*!< external trigger enable for inserted channels */
 #define ADC_CTL1_ETSIC_Pos             12
-#define ADC_CTL1_ETSIC_Msk             _AC(0x00007000,U)      /*!< external trigger select for inserted channel */
+#define ADC_CTL1_ETSIC_Msk             _AC(0x00007000,U)      /*!< external trigger select for inserted channels */
 #define ADC_CTL1_ETSIC(x)              ((x) << ADC_CTL1_ETSIC_Pos)
 #define ADC_CTL1_ETSIC_T0_TRGO         ADC_CTL1_ETSIC(0)      /*!< TIMER0 TRGO event select */
 #define ADC_CTL1_ETSIC_T0_CH3          ADC_CTL1_ETSIC(1)      /*!< TIMER0 CH3 event select */
@@ -121,7 +121,7 @@
 #define ADC_CTL1_ETSIC_T2_CH3          ADC_CTL1_ETSIC(4)      /*!< TIMER2 CH3 event select */
 #define ADC_CTL1_ETSIC_T3_TRGO         ADC_CTL1_ETSIC(5)      /*!< TIMER3 TRGO event select */
 #define ADC_CTL1_ETSIC_EXTI_15         ADC_CTL1_ETSIC(6)      /*!< external interrupt line 15 */
-#define ADC_CTL1_ETSIC_NONE            ADC_CTL1_ETSIC(7)      /*!< software trigger */
+#define ADC_CTL1_ETSIC_SWICST          ADC_CTL1_ETSIC(7)      /*!< software trigger */
 #define ADC_CTL1_DAL                   _BIT(11,U)             /*!< data alignment */
 #define ADC_CTL1_DMA                   _BIT(8,U)              /*!< direct memory access mode */
 #define ADC_CTL1_RSTCLB                _BIT(3,U)              /*!< reset calibration */
