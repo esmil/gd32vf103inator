@@ -133,10 +133,10 @@ typedef struct {
 } gpio_pin_t;
 #define GPIO_PIN(p, n) ((gpio_pin_t){ p, n })
 
-static inline struct gd32vf103_gpio *
-gpio_pin_port(gpio_pin_t pin)
+static inline unsigned int
+gpio_pin_port_nr(gpio_pin_t pin)
 {
-	return (struct gd32vf103_gpio *)(GPIOA_BASE + pin.port*0x400UL);
+	return pin.port;
 }
 static inline unsigned int
 gpio_pin_nr(gpio_pin_t pin)
@@ -155,10 +155,10 @@ gpio_pin_eq(gpio_pin_t a, gpio_pin_t b)
 typedef uint16_t gpio_pin_t;
 #define GPIO_PIN(p,n) (((gpio_pin_t)(p)<<8)|(gpio_pin_t)(n))
 
-static inline struct gd32vf103_gpio *
-gpio_pin_port(gpio_pin_t pin)
+static inline unsigned int
+gpio_pin_port_nr(gpio_pin_t pin)
 {
-	return (struct gd32vf103_gpio *)(GPIOA_BASE + (pin >> 8)*0x400UL);
+	return pin >> 8;
 }
 static inline unsigned int
 gpio_pin_nr(gpio_pin_t pin)
@@ -171,10 +171,10 @@ gpio_pin_nr(gpio_pin_t pin)
 typedef uint8_t gpio_pin_t;
 #define GPIO_PIN(p,n) (((gpio_pin_t)(p)<<4)|(gpio_pin_t)(n))
 
-static inline struct gd32vf103_gpio *
-gpio_pin_port(gpio_pin_t pin)
+static inline unsigned int
+gpio_pin_port_nr(gpio_pin_t pin)
 {
-	return (struct gd32vf103_gpio *)(GPIOA_BASE + (pin >> 4)*0x400UL);
+	return pin >> 4;
 }
 static inline unsigned int
 gpio_pin_nr(gpio_pin_t pin)
@@ -277,6 +277,12 @@ gpio_pin_eq(gpio_pin_t a, gpio_pin_t b)
 #define GPIO_PE14  GPIO_PIN(4,14)  /*!< GPIO pin E14 */
 #define GPIO_PE15  GPIO_PIN(4,15)  /*!< GPIO pin E15 */
 
+static inline struct gd32vf103_gpio *
+gpio_pin_port(gpio_pin_t pin)
+{
+	return (struct gd32vf103_gpio *)(GPIOA_BASE + gpio_pin_port_nr(pin)*0x400UL);
+}
+
 static inline uint32_t
 gpio_pin_high(gpio_pin_t pin)
 {
@@ -298,6 +304,8 @@ gpio_pin_clear(gpio_pin_t pin)
 	gpio_pin_port(pin)->BC = 1U << gpio_pin_nr(pin);
 }
 
+void gpio_pin_clock_enable(gpio_pin_t pin);
+void gpio_pin_clock_disable(gpio_pin_t pin);
 void gpio_pin_toggle(gpio_pin_t pin);
 void gpio_pin_config(gpio_pin_t pin, enum gpio_mode mode);
 

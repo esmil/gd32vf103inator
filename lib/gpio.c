@@ -24,6 +24,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
  * OF SUCH DAMAGE.
  */
+#include "gd32vf103/rcu.h"
 #include "lib/gpio.h"
 
 void gpio_toggle(struct gd32vf103_gpio *port, uint32_t pins)
@@ -59,6 +60,16 @@ void gpio_config(struct gd32vf103_gpio *port, uint32_t pins, enum gpio_mode emod
 			val = (val & ~mask) | mode;
 	}
 	port->CTL1 = val;
+}
+
+void gpio_pin_clock_enable(gpio_pin_t pin)
+{
+	RCU->APB2EN |= RCU_APB2EN_PAEN << gpio_pin_port_nr(pin);
+}
+
+void gpio_pin_clock_disable(gpio_pin_t pin)
+{
+	RCU->APB2EN &= ~(RCU_APB2EN_PAEN << gpio_pin_port_nr(pin));
 }
 
 void gpio_pin_toggle(gpio_pin_t pin)
