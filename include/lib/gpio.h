@@ -28,6 +28,7 @@
 #define LIB_GPIO_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "gd32vf103/gpio.h"
 
@@ -142,13 +143,13 @@ gpio_pin_nr(gpio_pin_t pin)
 {
 	return pin.nr;
 }
-static inline unsigned int
+static inline bool
 gpio_pin_eq(gpio_pin_t a, gpio_pin_t b)
 {
 	return (a.port == b.port) && (a.nr == b.nr);
 }
 
-#else
+#else /* !GPIO_TYPE_STRUCT */
 #ifdef GPIO_TYPE_16BIT
 
 typedef uint16_t gpio_pin_t;
@@ -165,7 +166,7 @@ gpio_pin_nr(gpio_pin_t pin)
 	return pin & 0xFFU;
 }
 
-#else
+#else /* !GPIO_TYPE_16BIT */
 
 typedef uint8_t gpio_pin_t;
 #define GPIO_PIN(p,n) (((gpio_pin_t)(p)<<4)|(gpio_pin_t)(n))
@@ -182,6 +183,12 @@ gpio_pin_nr(gpio_pin_t pin)
 }
 
 #endif
+
+static inline bool
+gpio_pin_eq(gpio_pin_t a, gpio_pin_t b)
+{
+	return a == b;
+}
 #endif
 
 /* GPIO pin definitions */
