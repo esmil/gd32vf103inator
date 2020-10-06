@@ -308,5 +308,6 @@ void gpio_pin_clock_enable(gpio_pin_t pin);
 void gpio_pin_clock_disable(gpio_pin_t pin);
 void gpio_pin_toggle(gpio_pin_t pin);
 void gpio_pin_config(gpio_pin_t pin, enum gpio_mode mode);
+enum gpio_mode gpio_pin_mode(gpio_pin_t pin);
 
 #endif

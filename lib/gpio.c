@@ -102,3 +102,19 @@ void gpio_pin_config(gpio_pin_t pin, enum gpio_mode emode)
 	*reg = (*reg & ~(0xfU << nr)) | (mode << nr);
 #endif
 }
+
+enum gpio_mode gpio_pin_mode(gpio_pin_t pin)
+{
+	struct gd32vf103_gpio *port = gpio_pin_port(pin);
+	unsigned int nr = 4*gpio_pin_nr(pin);
+	unsigned int ret;
+
+	if (nr < 4*8) {
+		ret = port->CTL0 >> nr;
+	} else {
+		nr &= 0x1fU;
+		ret = port->CTL1 >> nr;
+	}
+
+	return ret & 0xfU;
+}
