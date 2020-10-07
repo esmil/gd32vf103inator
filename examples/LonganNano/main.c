@@ -37,7 +37,10 @@
 
 #include "LonganNano.h"
 #include "display.h"
+#include "sdcard.h"
 #include "term.h"
+
+#include "ff.h"
 
 extern struct dp_font ter16n;
 extern struct dp_font ter16b;
@@ -91,9 +94,57 @@ static void mtimer_enable(void)
 	eclic_enable(MTIMER_IRQn);
 }
 
+#if FF_MULTI_PARTITION
+PARTITION VolToPart[FF_VOLUMES] = {
+	{ 0, 0 }, /* drive 0, autodetect */
+};
+#endif
+
+uint32_t get_fattime(void)
+{
+	return (2020U - 1980U) << 25 | /* year */
+	                    1U << 21 | /* month */
+	                    1U << 16 | /* day */
+	                   12U << 11 | /* hour */
+	                    0U <<  5 | /* minute */
+	                   0/2 <<  0;  /* seconds/2 */
+}
+
+static FRESULT
+listdir(struct term *term, const char *path)
+{
+	FILINFO fi;
+	DIR dir;
+	FRESULT res;
+
+	res = f_opendir(&dir, path);
+	if (res != FR_OK)
+		return res;
+
+	while (1) {
+		char *p;
+		char c;
+
+		res = f_readdir(&dir, &fi);
+		if (res != FR_OK)
+			break;
+		if (fi.fname[0] == '\0')
+			break;
+
+		p = fi.fname;
+		for (c = *p++; c != '\0'; c = *p++)
+			term_putchar(term, c);
+		term_putchar(term, '\n');
+	};
+
+	f_closedir(&dir);
+	return res;
+}
+
 int main(void)
 {
 	struct term term;
+	FATFS fs;
 
 	/* initialize system clock */
 	rcu_sysclk_init();
@@ -131,6 +182,10 @@ int main(void)
 	dp_line(160,0,0,80,0xf00);
 
 	term_init(&term, 0xfff, 0x000);
+
+	sd_init();
+	if (f_mount(&fs, "", 1) == FR_OK)
+		listdir(&term, "");
 
 	while (1) {
 		int c = usbacm_getchar();
