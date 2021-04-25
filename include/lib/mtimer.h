@@ -53,7 +53,7 @@ void mtimer_delay(uint32_t ticks);
 #ifdef MTIMER_FREQ
 static inline void mtimer_udelay(unsigned int us)
 {
-	mtimer_delay(us * MTIMER_FREQ/1000000);
+	mtimer_delay(us * (MTIMER_FREQ/1000000));
 }
 #endif
 
