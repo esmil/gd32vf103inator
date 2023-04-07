@@ -38,7 +38,7 @@ O          = build
 HERE      := $(dir $(lastword $(MAKEFILE_LIST)))
 OS        := $(if $(ComSpec),Windows,$(shell uname -s))
 
-ARCH       = rv32imac
+ARCH       = rv32imac_zicsr
 ABI        = ilp32
 CODEMODEL  = medlow
 
